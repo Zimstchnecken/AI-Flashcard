@@ -12,14 +12,30 @@ type UserState = {
 export default function AppHeader() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<UserState | null>(null);
+  const hasSupabaseEnv =
+    Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
+    Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
-  const supabase = useMemo(() => createClient(), []);
+  const supabase = useMemo(() => {
+    if (!hasSupabaseEnv) {
+      return null;
+    }
+    return createClient();
+  }, [hasSupabaseEnv]);
 
   useEffect(() => {
+    if (!supabase) {
+      setLoading(false);
+      setUser(null);
+      return;
+    }
+
+    const client = supabase;
+
     let mounted = true;
 
     async function loadUser() {
-      const { data } = await supabase.auth.getUser();
+      const { data } = await client.auth.getUser();
       if (!mounted) {
         return;
       }
@@ -33,7 +49,7 @@ export default function AppHeader() {
 
     loadUser();
 
-    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: subscription } = client.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         setUser({ email: session.user.email ?? null });
       } else {
@@ -48,6 +64,9 @@ export default function AppHeader() {
   }, [supabase]);
 
   async function signOut() {
+    if (!supabase) {
+      return;
+    }
     await supabase.auth.signOut();
     window.location.href = "/";
   }
