@@ -1,36 +1,145 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI Flashcard Generator
 
-## Getting Started
+Turn any text or PDF into AI-generated flashcards, then study with spaced repetition.
 
-First, run the development server:
+This project uses Next.js, Supabase, and OpenRouter.
+
+## Features
+
+- Text-to-flashcard generation with model fallback
+- PDF text extraction and generation flow
+- Supabase auth and per-user deck data
+- Study mode with SM-2 scheduling
+- Typed API routes with validation
+
+## Tech Stack
+
+- Next.js 16 (App Router, TypeScript)
+- Supabase (Auth + Postgres)
+- OpenRouter (via OpenAI-compatible SDK)
+- Zod validation
+- Vitest tests
+
+## Project Structure
+
+```text
+app/                  App router pages and API routes
+components/           UI components
+lib/                  Shared logic (OpenRouter, SM-2, rate limiting)
+supabase/migrations/  SQL schema
+types/                TypeScript models
+__tests__/            Route and logic tests
+```
+
+## Prerequisites
+
+- Node.js 20+
+- npm 10+
+- Supabase project
+- OpenRouter API key
+
+## 1) Local Setup
+
+```bash
+npm install
+cp .env.example .env.local
+```
+
+Fill in `.env.local` with your real values.
+
+Run the migration SQL in your Supabase SQL editor:
+
+```text
+supabase/migrations/001_initial_schema.sql
+```
+
+Start development:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+For the original Turbopack mode:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run dev:turbo
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 2) Required Environment Variables
 
-## Learn More
+Required:
 
-To learn more about Next.js, take a look at the following resources:
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `OPENROUTER_API_KEY`
+- `NEXT_PUBLIC_APP_URL`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Optional:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `UPSTASH_REDIS_URL`
+- `UPSTASH_REDIS_TOKEN`
 
-## Deploy on Vercel
+## 3) Supabase Auth Configuration
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+In Supabase Dashboard:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Enable magic link/email auth
+- Set site URL to your app URL
+- Set redirect URL to `/auth/callback`
+
+Examples:
+
+- Local: `http://localhost:3000`
+- Local callback: `http://localhost:3000/auth/callback`
+
+## 4) API Endpoints
+
+- `POST /api/generate` generate cards from text
+- `POST /api/parse-pdf` extract text from PDF
+- `GET|POST /api/decks` list and create decks
+- `GET|PATCH|DELETE /api/decks/[id]` manage single deck
+- `PATCH /api/cards/[id]` update card
+- `POST /api/study` submit study rating
+- `GET /api/health` environment health status
+
+## 5) Vercel Deployment
+
+1. Push this project to GitHub.
+2. Import repository in Vercel.
+3. Framework preset: Next.js.
+4. Add all environment variables in Vercel project settings.
+5. Deploy.
+
+After deploy, update Supabase auth URLs:
+
+- Site URL: your production domain
+- Redirect URL: `https://YOUR_DOMAIN/auth/callback`
+
+## 6) Verify Deployment
+
+1. Open home page and generate cards from text.
+2. Upload a PDF and confirm extraction works.
+3. Sign in via magic link.
+4. Save a deck, open dashboard, and start a study session.
+
+## 7) Quality Checks
+
+```bash
+npm run test
+npm run lint
+npm run type-check
+npm run build
+```
+
+Or all-in-one:
+
+```bash
+npm run verify
+```
+
+## Notes
+
+- Keep `OPENROUTER_API_KEY` server-side only.
+- Keep `SUPABASE_SERVICE_ROLE_KEY` server-side only.
+- OpenRouter requests require a valid app URL for referer header usage.
