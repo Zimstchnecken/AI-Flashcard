@@ -8,9 +8,7 @@ This project uses Next.js, Supabase, and OpenRouter.
 
 - Text-to-flashcard generation with model fallback
 - PDF text extraction and generation flow
-- Supabase auth and per-user deck data
-- Study mode with SM-2 scheduling
-- Typed API routes with validation
+- Saved decks after signing up
 
 ## Tech Stack
 
